@@ -1,11 +1,17 @@
 import matplotlib.pyplot as plt
-from pandas_profiling import ProfileReport
-
-import numpy as np
-import pandas as pd
 
 
 def vis_params_delay(data, max_cmap, *params, show=False, name_=''):
+    """
+    Function which plots figures. OX - params, OY - Delay
+    :param data: data for visualizing
+    :param max_cmap: reference point to save colormap scale
+    :param params: params to plot
+    :param show: show figures
+    :param name_: the second part of the name of the figures
+    :return: None
+    """
+    # add reference point to save colormap scale
     row = data.iloc[[len(data) - 1]]
     row['Delay'] = max_cmap + 10
     row.index.values[0] = len(data)
@@ -37,10 +43,5 @@ def vis_params_delay(data, max_cmap, *params, show=False, name_=''):
     plt.savefig(f"plots/{name}_{name_}.jpg")
     if show:
         plt.show()
+    # delete reference point
     data = data.drop(len(data) - 1)
-
-
-def pandas_prof(data):
-    # Create the data profile report
-    profile = ProfileReport(data, title="Pandas Profiling Report", minimal=True)
-    return profile

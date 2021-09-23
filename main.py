@@ -10,6 +10,13 @@ from sklearn.linear_model import LinearRegression, Lasso, Ridge
 
 # Resetting restrictions on the number of displayed rows, columns, records
 def pandas_options(max_rows=True, max_columns=True, max_colwidth=False):
+    """
+    Resetting restrictions on the number of displayed rows, columns, records
+    :param max_rows: reset rows restrictions
+    :param max_columns: reset columns restrictions
+    :param max_colwidth: reset column width restrictions
+    :return:
+    """
     if max_rows:
         pd.set_option('display.max_rows', None)
     if max_columns:
@@ -19,6 +26,14 @@ def pandas_options(max_rows=True, max_columns=True, max_colwidth=False):
 
 
 def prepare_data(return_data=False):
+    """
+    Returns data with new features ('Flight duration', 'year', 'month', 'day');
+    drop columns 'Scheduled depature time', 'Scheduled arrival time';
+    remove outliers with threshold=3
+    split data to train and test
+    :param return_data: not split data
+    :return:
+    """
     raw_data = pd.read_csv("flight_delay.csv")
     cat_feats = ['Depature Airport', 'Destination Airport']
     ohe_enc, label_enc = data_preproc.fit_encoders(raw_data)
@@ -36,6 +51,11 @@ def prepare_data(return_data=False):
 
 
 def generate_imgs(data):
+    """
+    Generates figures with different thresholds
+    :param data: input dataframe
+    :return: None
+    """
     max_cmap = max(data['Delay'])
     for i in range(1, 5):
         data_vis = data_preproc.remove_outliers(data.copy(), i)
@@ -47,17 +67,33 @@ def generate_imgs(data):
 
 
 def fit_models(x_train, y_train, x_test, y_test):
-    alphas = [i / 10 for i in range(1, 20, 2)]
-    linear_reg = [LinearRegression()]
-    ridges = [Ridge(i) for i in alphas]
-    lassos = [Lasso(i) for i in alphas]
-    models = linear_reg + ridges + lassos
-    degrees = [i for i in range(1, 4)]
-    pipelines, scores = fit_test.fit_poly_reg(x_train, y_train, x_test, y_test, models, degrees)
+    """
+    Generate, fit and test models
+    :param x_train: train predictors
+    :param y_train: train labels
+    :param x_test: test predictors
+    :param y_test: test labels
+    :return: dict of fitted models, errors score of testing
+    """
+    alphas = [i / 10 for i in range(1, 20, 2)]  # generate diff alphas for lasso and ridge
+    linear_reg = [LinearRegression()]  # linear reg
+    ridges = [Ridge(i) for i in alphas]  # list of ridges with diff alphas
+    lassos = [Lasso(i) for i in alphas]  # list of lassos with diff alphas
+    models = linear_reg + ridges + lassos  # concat all regressions
+    degrees = [i for i in range(1, 4)]  # generates degrees
+    pipelines, scores = fit_test.fit_poly_reg(x_train, y_train, x_test, y_test, models, degrees)  # fit models
     return pipelines, scores
 
 
 def eval_models(x_train, y_train, models, errors):
+    """
+    Evaluates models using cross-validation and prints results
+    :param x_train: train predictors
+    :param y_train: train labels
+    :param models: dict of models
+    :param errors: list of errors
+    :return: None
+    """
     print("Evaluation Errors:")
     scores = fit_test.cross_val_test(x_train, y_train, models, errors)
     for i, score in enumerate(scores):
@@ -68,6 +104,11 @@ def eval_models(x_train, y_train, models, errors):
 
 
 def print_test_results(scores):
+    """
+    Print errors scores of testing
+    :param scores: dict of errors scores
+    :return: None
+    """
     # scores = fit_test.test_models(x_test, y_test, models, errors)
     print("Test Errors:")
     for i, score in enumerate(scores):
@@ -78,9 +119,8 @@ def print_test_results(scores):
 
 def txt_all(name_, *params):
     """
-    Append arbitrary number of strings into .txt file in txtFiles directory or create a new file if
-    .txt file with passed filename does not exist
-    :param name_: first part of filename of .txt file. The second part of filename is _task4_1
+    Append arbitrary number of strings into .txt file
+    :param name_: first part of filename of .txt file. The second part of filename is log.txt
     :param params: strings to write
     :return: None
     """
@@ -94,6 +134,10 @@ def txt_all(name_, *params):
 
 
 def main():
+    """
+    Main function: prepare data, generate, fit, evaluate models, generate figures
+    :return: None
+    """
     pandas_options()
     data = prepare_data(return_data=True)
     x_train, x_test, y_train, y_test = prepare_data()
@@ -107,6 +151,6 @@ def main():
 if __name__ == "__main__":
     with contextlib.redirect_stdout(io.StringIO()) as f_:
         main()
-    # generate and print all information
+    # write to txt all information
     out = f_.getvalue()
     txt_all("test", out)
